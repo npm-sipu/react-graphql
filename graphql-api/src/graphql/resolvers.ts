@@ -3,35 +3,24 @@ import { State } from "../models/State";
 import { City } from "../models/City";
 import { User } from "../models/User";
 import mongoose from "mongoose";
-
-// Helper function to convert _id -> id for all documents
-const transformId = (doc: any) => {
-  if (!doc) return doc;
-  const id = doc._id ? doc._id.toString() : undefined;
-  const { _id, ...rest } = doc;
-  return { id, ...rest };
-};
+import { transformId } from "../helpers/utils";
 
 export const rootValue = {
-  // 🟢 Get all countries
   countries: async () => {
     const countries = await Country.find().lean();
     return countries.map(transformId);
   },
 
-  // 🟢 Get states by country
   states: async ({ countryId }: { countryId: string }) => {
     const states = await State.find({ country: countryId }).lean();
     return states.map(transformId);
   },
 
-  // 🟢 Get cities by state
   cities: async ({ stateId }: { stateId: string }) => {
     const cities = await City.find({ state: stateId }).lean();
     return cities.map(transformId);
   },
 
-  // 🟢 Get all users (with optional filters)
   users: async ({
     countryId,
     stateId,
@@ -60,7 +49,6 @@ export const rootValue = {
     }));
   },
 
-  // 🟢 Get single user by ID
   user: async ({ id }: { id: string }) => {
     if (!mongoose.isValidObjectId(id)) return null;
 
@@ -80,7 +68,6 @@ export const rootValue = {
     };
   },
 
-  // 🟢 Create new user
   createUser: async ({ input }: { input: any }) => {
     const existing = await User.findOne({ email: input.email });
     if (existing) {
@@ -100,6 +87,58 @@ export const rootValue = {
     });
 
     const u = await User.findById(newUser._id)
+      .populate("country")
+      .populate("state")
+      .populate("city")
+      .lean();
+
+    return {
+      ...transformId(u),
+      country: transformId(u?.country),
+      state: transformId(u?.state),
+      city: transformId(u?.city),
+    };
+  },
+  editUser: async ({ id, input }: { id: string; input: any }) => {
+    if (!mongoose.isValidObjectId(id)) throw new Error("Invalid user ID");
+
+    const existingUser = await User.findById(id);
+    if (!existingUser) throw new Error("User not found");
+
+    // Check if email already exists for another user
+    if (input.email) {
+      const emailUser = await User.findOne({
+        email: input.email,
+        _id: { $ne: id },
+      });
+      if (emailUser) throw new Error("Email already in use by another user");
+    }
+
+    // Update user fields dynamically
+    const updatedData: any = {};
+    const fields = [
+      "firstName",
+      "lastName",
+      "email",
+      "dob",
+      "role",
+      "countryId",
+      "stateId",
+      "cityId",
+    ];
+
+    fields.forEach((key) => {
+      if (input[key]) {
+        if (key === "countryId") updatedData.country = input.countryId;
+        else if (key === "stateId") updatedData.state = input.stateId;
+        else if (key === "cityId") updatedData.city = input.cityId;
+        else updatedData[key] = input[key];
+      }
+    });
+
+    await User.findByIdAndUpdate(id, updatedData);
+
+    const u = await User.findById(id)
       .populate("country")
       .populate("state")
       .populate("city")
