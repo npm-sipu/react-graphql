@@ -156,7 +156,6 @@ export const rootValue = {
     const states = await State.find().lean();
     const cities = await City.find().lean();
 
-    // Mapping states by country
     const stateMap: Record<string, any[]> = {};
     states.forEach((state) => {
       const key = state.country.toString();
@@ -164,7 +163,6 @@ export const rootValue = {
       stateMap[key].push(state);
     });
 
-    // Mapping cities by state
     const cityMap: Record<string, any[]> = {};
     cities.forEach((city) => {
       const key = city.state.toString();
@@ -172,7 +170,6 @@ export const rootValue = {
       cityMap[key].push(city);
     });
 
-    // Return final transformed structure
     return countries.map((country) => {
       const transformedCountry = transformId(country);
 
