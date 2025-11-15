@@ -17,3 +17,28 @@ export const usersResponseSchema = z.object({
 // Infer types from schema for full type safety
 export type TUser = z.infer<typeof userSchema>;
 export type TUsersResponse = z.infer<typeof usersResponseSchema>;
+
+export const UserLocationSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export const UserSchema = z.object({
+  id: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string(),
+  dob: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+
+  country: UserLocationSchema,
+  state: UserLocationSchema,
+  city: UserLocationSchema,
+});
+
+export const UsersResponseSchema = z.object({
+  users: z.array(UserSchema),
+});
+
+export type UsersResponse = z.infer<typeof UsersResponseSchema>;

@@ -1,11 +1,11 @@
 import "./App.css";
-import UsersList from "./components/UsersList";
+import HomePage from "./components/Pages/HomePage";
 
 function App() {
   return (
-    <>
-      <UsersList />
-    </>
+    <div className='min-w-full'>
+      <HomePage />
+    </div>
   );
 }
 
