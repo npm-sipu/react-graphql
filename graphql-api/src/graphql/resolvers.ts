@@ -151,4 +151,49 @@ export const rootValue = {
       city: transformId(u?.city),
     };
   },
+  locationTree: async () => {
+    const countries = await Country.find().lean();
+    const states = await State.find().lean();
+    const cities = await City.find().lean();
+
+    // Mapping states by country
+    const stateMap: Record<string, any[]> = {};
+    states.forEach((state) => {
+      const key = state.country.toString();
+      if (!stateMap[key]) stateMap[key] = [];
+      stateMap[key].push(state);
+    });
+
+    // Mapping cities by state
+    const cityMap: Record<string, any[]> = {};
+    cities.forEach((city) => {
+      const key = city.state.toString();
+      if (!cityMap[key]) cityMap[key] = [];
+      cityMap[key].push(city);
+    });
+
+    // Return final transformed structure
+    return countries.map((country) => {
+      const transformedCountry = transformId(country);
+
+      const countryStates = stateMap[country._id.toString()] || [];
+
+      const transformedStates = countryStates.map((state) => {
+        const transformedState = transformId(state);
+        const stateCities = cityMap[state._id.toString()] || [];
+
+        const transformedCities = stateCities.map(transformId);
+
+        return {
+          ...transformedState,
+          cities: transformedCities,
+        };
+      });
+
+      return {
+        ...transformedCountry,
+        states: transformedStates,
+      };
+    });
+  },
 };

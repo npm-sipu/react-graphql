@@ -5,12 +5,14 @@ export const schema = buildSchema(`
     id: ID!
     name: String!
     code: String
+    states: [State!]! 
   }
 
   type State {
     id: ID!
     name: String!
     country: ID!
+    cities: [City!]! 
   }
 
   type City {
@@ -49,6 +51,7 @@ export const schema = buildSchema(`
     cities(stateId: ID!): [City!]!
     users(countryId: ID, stateId: ID, cityId: ID): [User!]!
     user(id: ID!): User
+    locationTree: [Country!]!
   }
 
   type Mutation {
