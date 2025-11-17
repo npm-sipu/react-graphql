@@ -19,6 +19,15 @@ import { RHFDatePicker } from "./FormControl/RHFDatePicker";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { z } from "zod";
+import {
+  createUser,
+  getCities,
+  getCountries,
+  getStates,
+} from "../services/api.service";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { roles } from "../helper/Constant";
+import type { CreateUserInput } from "../schemas/user.schema";
 
 export const UserFormSchema = z.object({
   firstName: z.string().min(1, "Required"),
@@ -27,6 +36,7 @@ export const UserFormSchema = z.object({
   country: z.string().min(1, "Required"),
   state: z.string().min(1, "Required"),
   city: z.string().min(1, "Required"),
+  role: z.string().min(1, "Required"),
   dob: z.string().optional(), // if optional
 });
 
@@ -42,7 +52,9 @@ export function getDefaultValues(data?: Partial<TUserForm>): TUserForm {
     country: data?.country ?? "",
     state: data?.state ?? "",
     city: data?.city ?? "",
-    dob: data?.dob ?? "", // or undefined if you want optional
+    dob: data?.dob ?? "",
+    role: data?.role ?? "",
+    // or undefined if you want optional
   };
 }
 
@@ -51,26 +63,101 @@ interface IAddEditUserDialogProps {
   onClose: () => void;
   //   handleReset: () => void;
   defaultValues?: Partial<TUserForm>;
+  reloadData: () => void;
 }
 
 function AddEditUserModal({
   open,
   onClose,
-}: //   handleReset,
-//   defaultValues,
-IAddEditUserDialogProps) {
+  reloadData,
+}: IAddEditUserDialogProps) {
   const {
     formState: { errors, isDirty },
-    // reset,
+    reset,
     control,
     handleSubmit,
+    watch,
   } = useForm<TUserForm>({
     resolver: zodResolver(UserFormSchema),
     defaultValues: getDefaultValues(),
   });
 
+  const handleClose = () => {
+    onClose();
+    reset();
+  };
+
+  const {
+    data: countryOptionsData = [],
+    isLoading: countryOptionsDataLoading,
+  } = useQuery({
+    queryKey: ["country_data"],
+    queryFn: getCountries,
+    select: (data) => {
+      return data.countries.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+    },
+    enabled: open,
+  });
+
+  const countryId = watch("country");
+
+  const { data: statesOptionsData = [], isLoading: statesOptionsDataLoading } =
+    useQuery({
+      queryKey: ["states_data", countryId],
+      queryFn: () => getStates(countryId),
+      select: (data) => {
+        return data.states.map((item) => ({
+          label: item.name,
+          value: item.id,
+        }));
+      },
+      enabled: !!countryId,
+    });
+
+  const stateId = watch("state");
+
+  const { data: cityOptionsData = [], isLoading: cityOptionsDataLoading } =
+    useQuery({
+      queryKey: ["cities_data", stateId],
+      queryFn: () => getCities(stateId),
+      select: (data) => {
+        return data.cities.map((item) => ({
+          label: item.name,
+          value: item.id,
+        }));
+      },
+      enabled: !!stateId,
+    });
+
+  const { mutate: createUserMutate, isPending } = useMutation({
+    mutationFn: (data: CreateUserInput) => createUser(data),
+    onSuccess: (data) => {
+      console.log("data", data);
+      reloadData();
+      handleClose();
+    },
+    onError: (error) => {
+      console.error("Error creating apr:", error);
+    },
+  });
+
   const onSubmit = (data: TUserForm) => {
     console.log("data of form", data);
+
+    const payload: CreateUserInput = {
+      firstName: data.firstName ?? "",
+      lastName: data.lastName ?? "",
+      email: data.email ?? "",
+      countryId: data.country ?? "",
+      stateId: data.state ?? "",
+      cityId: data.city ?? "",
+      dob: data.dob ?? "",
+      role: data.role ?? "",
+    };
+    createUserMutate(payload);
   };
 
   return (
@@ -139,7 +226,7 @@ IAddEditUserDialogProps) {
                       isLoading={false}
                       name='country'
                       control={control}
-                      options={[]}
+                      options={countryOptionsData ?? []}
                       placeholder='Select Country'
                       error={errors.country?.message as string}
                     />
@@ -153,7 +240,7 @@ IAddEditUserDialogProps) {
                       isLoading={false}
                       name='state'
                       control={control}
-                      options={[]}
+                      options={statesOptionsData ?? []}
                       placeholder='Select State'
                       error={errors.state?.message as string}
                     />
@@ -167,9 +254,23 @@ IAddEditUserDialogProps) {
                       isLoading={false}
                       name='city'
                       control={control}
-                      options={[]}
+                      options={cityOptionsData ?? []}
                       placeholder='Select City'
                       error={errors.city?.message as string}
+                    />
+                  </div>
+                </div>
+
+                <div className='flex items-center gap-2 w-full'>
+                  <p className='w-1/3 text-[13px]'>Roles *</p>
+                  <div className='flex-1'>
+                    <ReactCustomSelect
+                      isLoading={false}
+                      name='role'
+                      control={control}
+                      options={roles ?? []}
+                      placeholder='Select Country'
+                      error={errors.country?.message as string}
                     />
                   </div>
                 </div>
@@ -180,7 +281,7 @@ IAddEditUserDialogProps) {
                     <RHFDatePicker
                       name='dob'
                       control={control}
-                      placeholder=' '
+                      placeholder='Select a Date'
                       error={errors.dob?.message ? true : false}
                       helperText={errors.dob?.message}
                     />
@@ -190,8 +291,8 @@ IAddEditUserDialogProps) {
             </Container>
           </div>
 
-          <div className='flex justify-end mt-4 gap-2'>
-            <Button variant='outlined' size='small' onClick={onClose}>
+          <div className='flex justify-end mt-4 gap-2 mx-5'>
+            <Button variant='outlined' size='small' onClick={handleClose}>
               Cancel
             </Button>
             <Button
@@ -199,7 +300,6 @@ IAddEditUserDialogProps) {
               size='small'
               color='primary'
               type='submit'
-              // onClick={handleReset}
               disabled={!isDirty}
             >
               Create
@@ -212,7 +312,12 @@ IAddEditUserDialogProps) {
             color: "#fff",
             zIndex: theme.zIndex.drawer + 1,
           })}
-          open={false}
+          open={
+            countryOptionsDataLoading ||
+            cityOptionsDataLoading ||
+            statesOptionsDataLoading ||
+            isPending
+          }
         >
           <CircularProgress color='primary' />
         </Backdrop>

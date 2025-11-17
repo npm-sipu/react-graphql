@@ -23,3 +23,30 @@ export const GET_USERS_QUERY = `
     }
   }
 `;
+
+export const CREATE_USER_MUTATION = `
+  mutation CreateUser($input: CreateUserInput!) {
+    createUser(input: $input) {
+      id
+      firstName
+      lastName
+      email
+      dob
+      role
+      createdAt
+      country {
+        id
+        name
+        code
+      }
+      state {
+        id
+        name
+      }
+      city {
+        id
+        name
+      }
+    }
+  }
+`;
