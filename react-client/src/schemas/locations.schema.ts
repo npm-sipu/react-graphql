@@ -32,3 +32,36 @@ export interface LocationTreeProps {
   data: Country[];
   onSelect?: (type: "country" | "state" | "city", id: string) => void;
 }
+
+export const CountriesOptionsSchema = z.object({
+  countries: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+    })
+  ),
+});
+
+export type CountriesResponse = z.infer<typeof CountriesOptionsSchema>;
+
+export const StatesOptionsSchema = z.object({
+  states: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+    })
+  ),
+});
+
+export type StatesResponse = z.infer<typeof StatesOptionsSchema>;
+
+export const CitiesOptionsSchema = z.object({
+  cities: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+    })
+  ),
+});
+
+export type CitiesResponse = z.infer<typeof CitiesOptionsSchema>;

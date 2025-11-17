@@ -17,3 +17,97 @@ export const usersResponseSchema = z.object({
 // Infer types from schema for full type safety
 export type TUser = z.infer<typeof userSchema>;
 export type TUsersResponse = z.infer<typeof usersResponseSchema>;
+
+export const UserLocationSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export const UserSchema = z.object({
+  id: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string(),
+  dob: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+
+  country: UserLocationSchema,
+  state: UserLocationSchema,
+  city: UserLocationSchema,
+});
+
+export const UsersResponseSchema = z.object({
+  users: z.array(UserSchema),
+});
+
+export type UsersResponse = z.infer<typeof UsersResponseSchema>;
+
+export const CreateUserInputSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().email(),
+  dob: z.string().optional(),
+  countryId: z.string(),
+  stateId: z.string(),
+  cityId: z.string(),
+  role: z.string().optional(),
+});
+
+export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
+
+export const LocationBaseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export const CountrySchema = LocationBaseSchema.extend({
+  code: z.string().nullable().optional(),
+});
+
+export const CreateUserResponseSchema = z.object({
+  createUser: z.object({
+    id: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
+    email: z.string().email(),
+    dob: z.string().nullable().optional(),
+    role: z.string().nullable().optional(),
+    createdAt: z.string().optional(),
+    country: CountrySchema,
+    state: LocationBaseSchema,
+    city: LocationBaseSchema,
+  }),
+});
+
+export type CreateUserResponse = z.infer<typeof CreateUserResponseSchema>;
+
+export const EditUserResponseSchema = z.object({
+  editUser: z.object({
+    id: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
+    email: z.string(),
+    dob: z.string().nullable().optional(),
+    role: z.string().optional(),
+    createdAt: z.string().optional(),
+    country: CountrySchema,
+    state: LocationBaseSchema,
+    city: LocationBaseSchema,
+  }),
+});
+
+export type EditUserResponse = z.infer<typeof EditUserResponseSchema>;
+
+export const EditUserInputSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  dob: z.string().optional(),
+  role: z.string().optional(),
+  countryId: z.string().optional(),
+  stateId: z.string().optional(),
+  cityId: z.string().optional(),
+});
+
+export type EditUserInput = z.infer<typeof EditUserInputSchema>;

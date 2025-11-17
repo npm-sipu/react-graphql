@@ -14,3 +14,30 @@ export const LOCATION_TREE_QUERY = `
     }
   }
 `;
+
+export const COUNTRIES_QUERY = `
+  query {
+    countries {
+      id
+      name
+    }
+  }
+`;
+
+export const STATES_QUERY = `
+  query($countryId: ID!) {
+    states(countryId: $countryId) {
+      id
+      name
+    }
+  }
+`;
+
+export const CITIES_QUERY = `
+  query($stateId: ID!) {
+    cities(stateId: $stateId) {
+      id
+      name
+    }
+  }
+`;
