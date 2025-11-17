@@ -34,6 +34,9 @@ export const schema = buildSchema(`
     createdAt: String
   }
 
+ 
+
+
   input CreateUserInput {
     firstName: String!
     lastName: String!
@@ -44,6 +47,17 @@ export const schema = buildSchema(`
     cityId: ID!
     role: String
   }
+
+  input EditUserInput {
+  firstName: String
+  lastName: String
+  email: String
+  dob: String
+  role: String
+  countryId: ID
+  stateId: ID
+  cityId: ID
+}
 
   type Query {
     countries: [Country!]!
@@ -56,5 +70,6 @@ export const schema = buildSchema(`
 
   type Mutation {
     createUser(input: CreateUserInput!): User!
+    editUser(id: ID!, input: EditUserInput!): User!
   }
 `);

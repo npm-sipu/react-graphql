@@ -24,12 +24,21 @@ export default function HomePage() {
 
   const [filters, setFilters] = useState<UserFilters>({});
 
-  console.log("filters", filters);
+  const [editOpen, setEditOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
-  const [addEditOpen, setAddEditOpen] = useState(false);
+  const [userDetails, setUserDetails] = useState<User>();
 
-  const handleOpenAddEdit = () => setAddEditOpen(true);
-  const handleCloseAddEdit = () => setAddEditOpen(false);
+  const handleOpenAddEdit = () => setAddOpen(true);
+  const handleCloseAddEdit = () => setAddOpen(false);
+
+  const handleOpenEdit = () => setEditOpen(true);
+  const handleCloseEdit = () => setEditOpen(false);
+
+  const handleUpdateUser = (userData: User) => {
+    handleOpenEdit();
+    setUserDetails(userData);
+  };
 
   const {
     data: usersData,
@@ -66,7 +75,7 @@ export default function HomePage() {
 
   return (
     <div className='w-full flex items-start max-h-screen'>
-      <div className='flex flex-col w-[20%] justify-start items-start'>
+      <div className='flex flex-col w-[20%] justify-start gap-2 items-start'>
         <div className='flex justify-end'>
           <Button variant='outlined' size='small' onClick={handleOpenAddEdit}>
             Create
@@ -80,13 +89,25 @@ export default function HomePage() {
       </div>
 
       <div className='flex flex-1 w-[80vw] overflow-x-auto'>
-        <UsersTable users={usersData?.users as User[]} />
+        <UsersTable
+          onEdit={handleUpdateUser}
+          users={usersData?.users as User[]}
+        />
       </div>
 
       <AddEditUserModal
+        type={"edit"}
+        defaultData={userDetails}
         reloadData={reloadData}
-        open={addEditOpen}
+        open={editOpen}
+        onClose={handleCloseEdit}
+      />
+
+      <AddEditUserModal
+        reloadData={reloadData}
+        open={addOpen}
         onClose={handleCloseAddEdit}
+        type={"add"}
       />
 
       <Backdrop

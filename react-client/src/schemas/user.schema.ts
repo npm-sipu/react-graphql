@@ -81,3 +81,33 @@ export const CreateUserResponseSchema = z.object({
 });
 
 export type CreateUserResponse = z.infer<typeof CreateUserResponseSchema>;
+
+export const EditUserResponseSchema = z.object({
+  editUser: z.object({
+    id: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
+    email: z.string(),
+    dob: z.string().nullable().optional(),
+    role: z.string().optional(),
+    createdAt: z.string().optional(),
+    country: CountrySchema,
+    state: LocationBaseSchema,
+    city: LocationBaseSchema,
+  }),
+});
+
+export type EditUserResponse = z.infer<typeof EditUserResponseSchema>;
+
+export const EditUserInputSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  dob: z.string().optional(),
+  role: z.string().optional(),
+  countryId: z.string().optional(),
+  stateId: z.string().optional(),
+  cityId: z.string().optional(),
+});
+
+export type EditUserInput = z.infer<typeof EditUserInputSchema>;

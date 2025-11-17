@@ -13,6 +13,10 @@ export function formatToISOString(
 }
 
 export const roles = [
+  { label: "Admin", value: "Admin" },
+  { label: "User", value: "User" },
+  { label: "Designer", value: "Designer" },
+  { label: "Manager", value: "Manager" },
   { label: "Tester", value: "Tester" },
   { label: "Developer", value: "Developer" },
   { label: "Frontend Developer", value: "Frontend Developer" },

@@ -50,3 +50,30 @@ export const CREATE_USER_MUTATION = `
     }
   }
 `;
+
+export const EDIT_USER_MUTATION = `
+  mutation EditUser($id: ID!, $input: EditUserInput!) {
+    editUser(id: $id, input: $input) {
+      id
+      firstName
+      lastName
+      email
+      dob
+      role
+      createdAt
+      country {
+        id
+        name
+        code
+      }
+      state {
+        id
+        name
+      }
+      city {
+        id
+        name
+      }
+    }
+  }
+`;

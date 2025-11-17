@@ -8,6 +8,7 @@ import {
   CircularProgress,
   Container,
 } from "@mui/material";
+
 import { useForm } from "react-hook-form";
 
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -21,13 +22,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   createUser,
+  editUser,
   getCities,
   getCountries,
   getStates,
 } from "../services/api.service";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { roles } from "../helper/Constant";
-import type { CreateUserInput } from "../schemas/user.schema";
+import type { CreateUserInput, EditUserInput } from "../schemas/user.schema";
+import type { User } from "./UsersTable";
+import { useEffect } from "react";
 
 export const UserFormSchema = z.object({
   firstName: z.string().min(1, "Required"),
@@ -44,14 +48,14 @@ export type TUserForm = z.infer<typeof UserFormSchema>;
 
 // Default values helper
 // eslint-disable-next-line react-refresh/only-export-components
-export function getDefaultValues(data?: Partial<TUserForm>): TUserForm {
+export function getDefaultValues(data?: User): TUserForm {
   return {
     firstName: data?.firstName ?? "",
     lastName: data?.lastName ?? "",
     email: data?.email ?? "",
-    country: data?.country ?? "",
-    state: data?.state ?? "",
-    city: data?.city ?? "",
+    country: data?.country.id ?? "",
+    state: data?.state.id ?? "",
+    city: data?.city.id ?? "",
     dob: data?.dob ?? "",
     role: data?.role ?? "",
     // or undefined if you want optional
@@ -62,14 +66,17 @@ interface IAddEditUserDialogProps {
   open: boolean;
   onClose: () => void;
   //   handleReset: () => void;
-  defaultValues?: Partial<TUserForm>;
+  defaultData?: User;
   reloadData: () => void;
+  type: string;
 }
 
 function AddEditUserModal({
   open,
   onClose,
   reloadData,
+  defaultData,
+  type,
 }: IAddEditUserDialogProps) {
   const {
     formState: { errors, isDirty },
@@ -77,6 +84,7 @@ function AddEditUserModal({
     control,
     handleSubmit,
     watch,
+    setValue,
   } = useForm<TUserForm>({
     resolver: zodResolver(UserFormSchema),
     defaultValues: getDefaultValues(),
@@ -86,6 +94,24 @@ function AddEditUserModal({
     onClose();
     reset();
   };
+
+  const isAdd = type === "add";
+  const isEdit = type === "edit";
+
+  useEffect(() => {
+    if (defaultData) {
+      reset({
+        firstName: defaultData?.firstName ?? "",
+        lastName: defaultData?.lastName ?? "",
+        email: defaultData?.email ?? "",
+        country: defaultData?.country?.id ?? "",
+        state: defaultData?.state?.id ?? "",
+        city: defaultData?.city?.id ?? "",
+        dob: defaultData?.dob ?? "",
+        role: defaultData?.role ?? "",
+      });
+    }
+  }, [defaultData, reset]);
 
   const {
     data: countryOptionsData = [],
@@ -136,11 +162,24 @@ function AddEditUserModal({
     mutationFn: (data: CreateUserInput) => createUser(data),
     onSuccess: (data) => {
       console.log("data", data);
+
       reloadData();
       handleClose();
     },
     onError: (error) => {
       console.error("Error creating apr:", error);
+    },
+  });
+
+  const { mutate: updateUserMutate, isPending: isUpdatePending } = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: EditUserInput }) =>
+      editUser(id, input),
+    onSuccess: () => {
+      reloadData();
+      handleClose();
+    },
+    onError: (err) => {
+      console.error("Error updating apr:", err);
     },
   });
 
@@ -157,7 +196,11 @@ function AddEditUserModal({
       dob: data.dob ?? "",
       role: data.role ?? "",
     };
-    createUserMutate(payload);
+    if (isAdd) {
+      createUserMutate(payload);
+    } else if (isEdit) {
+      updateUserMutate({ id: defaultData?.id as string, input: payload });
+    }
   };
 
   return (
@@ -179,7 +222,7 @@ function AddEditUserModal({
           }}
           variant='h6'
         >
-          Create User Modal
+          {isAdd ? "Create" : "Update"} User Modal
         </Typography>
       </DialogTitle>
 
@@ -229,6 +272,10 @@ function AddEditUserModal({
                       options={countryOptionsData ?? []}
                       placeholder='Select Country'
                       error={errors.country?.message as string}
+                      onDeselect={() => {
+                        setValue("state", "");
+                        setValue("city", "");
+                      }}
                     />
                   </div>
                 </div>
@@ -243,6 +290,9 @@ function AddEditUserModal({
                       options={statesOptionsData ?? []}
                       placeholder='Select State'
                       error={errors.state?.message as string}
+                      onDeselect={() => {
+                        setValue("city", "");
+                      }}
                     />
                   </div>
                 </div>
@@ -302,7 +352,7 @@ function AddEditUserModal({
               type='submit'
               disabled={!isDirty}
             >
-              Create
+              {isAdd ? "Create" : "Update"}
             </Button>
           </div>
         </form>
@@ -316,7 +366,8 @@ function AddEditUserModal({
             countryOptionsDataLoading ||
             cityOptionsDataLoading ||
             statesOptionsDataLoading ||
-            isPending
+            isPending ||
+            isUpdatePending
           }
         >
           <CircularProgress color='primary' />

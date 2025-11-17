@@ -4,7 +4,11 @@ import {
   LOCATION_TREE_QUERY,
   STATES_QUERY,
 } from "../queries/locationTree.query";
-import { CREATE_USER_MUTATION, GET_USERS_QUERY } from "../queries/users.query";
+import {
+  CREATE_USER_MUTATION,
+  EDIT_USER_MUTATION,
+  GET_USERS_QUERY,
+} from "../queries/users.query";
 import {
   type CitiesResponse,
   type CountriesResponse,
@@ -19,6 +23,9 @@ import {
   type CreateUserInput,
   type CreateUserResponse,
   CreateUserResponseSchema,
+  type EditUserInput,
+  type EditUserResponse,
+  EditUserResponseSchema,
   type UsersResponse,
   UsersResponseSchema,
 } from "../schemas/user.schema";
@@ -79,5 +86,16 @@ export const createUser = async (
     CREATE_USER_MUTATION,
     { input },
     CreateUserResponseSchema
+  );
+};
+
+export const editUser = async (
+  id: string,
+  input: EditUserInput
+): Promise<EditUserResponse> => {
+  return fetchGraphQL<EditUserResponse>(
+    EDIT_USER_MUTATION,
+    { id, input },
+    EditUserResponseSchema
   );
 };
